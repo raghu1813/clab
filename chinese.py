@@ -1,60 +1,30 @@
-
-def extended_euclidean(a, b):
-    if a == 0:
-        return (b, 0, 1)
-    else:
-        g, y, x = extended_euclidean(b % a, a)
-        return (g, x - (b // a) * y, y)
+from functools import reduce
 
 
-
-def modinv(a, m):
-    g, x, y = extended_euclidean(a, m)
-    return x % m
-
-
-
-def crt(m, x):
-
-    while True:
+def chinese_remainder(n, a):
+    sum = 0
+    prod = reduce(lambda a, b: a * b, n)
+    for n_i, a_i in zip(n, a):
+        p = prod // n_i
+        sum += a_i * mul_inv(p, n_i) * p
+    return sum % prod
 
 
-        temp1 = modinv(m[1], m[0]) * x[0] * m[1] + \
-                modinv(m[0], m[1]) * x[1] * m[0]
-
-        # temp2 contains the value of the modulus
-        # in the new equation, which will be the
-        # product of the modulii of the two
-        # equations that we are combining
-        temp2 = m[0] * m[1]
-
-        # we then remove the first two elements
-        # from the list of remainders, and replace
-        # it with the remainder value, which will
-        # be temp1 % temp2
-        x.remove(x[0])
-        x.remove(x[0])
-        x = [temp1 % temp2] + x
-
-        # we then remove the first two values from
-        # the list of modulii as we no longer require
-        # them and simply replace them with the new
-        # modulii that we calculated
-        m.remove(m[0])
-        m.remove(m[0])
-        m = [temp2] + m
-
-        # once the list has only one element left,
-        # we can break as it will only contain
-        # the value of our final remainder
-        if len(x) == 1:
-            break
-
-    # returns the remainder of the final equation
-    return x[0]
+def mul_inv(a, b):
+    b0 = b
+    x0, x1 = 0, 1
+    if b == 1: return 1
+    while a > 1:
+        q = a // b
+        a, b = b, a % b
+        x0, x1 = x1 - q * x0, x0
+    if x1 < 0: x1 += b0
+    return x1
 
 
-# driver segment
-m = [3,5]
-x = [2,3]
-print(crt(m, x))
+if __name__ == '__main__':
+    # n = [3, 5, 7]
+    # a = [2, 3, 2]
+    n = [1927, 187, 667]
+    a = [292, 146, 663]
+    print(chinese_remainder(n, a))

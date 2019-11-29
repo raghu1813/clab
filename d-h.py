@@ -1,62 +1,65 @@
-import unittest
+import socket
+from config import p, g, alice_add, bob_add, choose_private_key, compute_public_key, compute_shared_secret_key
 
 
-# Tests adapted from `problem-specifications//canonical-data.json` @ v1.0.0
+def main():
+    print('This is Alice, p = {}; g = {}'.format(p, g))
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as alice:
+        alice.bind(alice_add)
+        alice.listen()
 
-class DiffieHellmanTest(unittest.TestCase):
+        conn, _ = alice.accept()
 
-    def test_private_key_is_in_range(self):
-        primes = [5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47]
-        for i in primes:
-            self.assertTrue(1 < diffie_hellman.private_key(i) < i)
+        # send Name
+        conn.send(b'Hey, Alice here!')
+        # receive name
+        print(conn.recv(1024).decode())
 
-    # Can fail due to randomness, but most likely will not,
-    # due to pseudo-randomness and the large number chosen
-    def test_private_key_is_random(self):
-        p = 2147483647
-        private_keys = []
-        for i in range(5):
-            private_keys.append(diffie_hellman.private_key(p))
-        self.assertEqual(len(set(private_keys)), len(private_keys))
+        # choose private key
+        a = choose_private_key()
+        print('private key:', a)
 
-    def test_can_calculate_public_key_using_private_key(self):
-        p = 23
-        g = 5
-        private = 6
-        expected = 8
+        # compute public key
+        A = compute_public_key(a)
+        print('public key:', A)
 
-        actual = diffie_hellman.public_key(p, g, private)
-        self.assertEqual(actual, expected)
+        # send A
+        conn.send(str(A).encode())
 
-    def test_can_calculate_secret_using_other_party_s_public_key(self):
-        p = 23
-        public = 19
-        private = 6
-        expected = 2
+        # Receive B
+        B = int(conn.recv(1024).decode())
+        print('Received from Bob:', B)
 
-        actual = diffie_hellman.secret(p, public, private)
-        self.assertEqual(actual, expected)
+        # compute shared secret key
+        K = compute_shared_secret_key(a, B)
 
-    def test_key_exchange(self):
-        p = 23
-        g = 5
-        alice_private_key = diffie_hellman.private_key(p)
-        bob_private_key = diffie_hellman.private_key(p)
-        alice_public_key = diffie_hellman.public_key(p, g, alice_private_key)
-        bob_public_key = diffie_hellman.public_key(p, g, bob_private_key)
-        secret_a = diffie_hellman.secret(p, bob_public_key, alice_private_key)
-        secret_b = diffie_hellman.secret(p, alice_public_key, bob_private_key)
-
-        self.assertEqual(secret_a, secret_b)
-
-def private_key(p):
-    pass
+    print(K)
 
 
-def public_key(p, g, private):
-    pass
+if __name__ == "__main__":
+    main()
+
+p = 23
+g = 5
+
+alice_add = ('localhost', 4444)
+bob_add = ('localhost', 5555)
+
+private_key_range = 20
 
 
-def secret(p, public, private):
-if __name__ == '__main__':
-    unittest.main()
+def choose_private_key():
+    import random
+    return random.randint(1, private_key_range)
+
+
+def compute_public_key(x):
+    return (g**x) % p
+
+
+def compute_shared_secret_key(x, Y):
+    '''
+    x:= a and Y:= B (or)
+    x:= b and Y:= A
+    '''
+    return (Y**x) % p

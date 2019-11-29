@@ -24,14 +24,12 @@ def des_encrypt(key, plain_text):
 	IV="33333333"
 	key_handler = pyDes.des(key, pyDes.CBC, IV, pad=None, padmode=pyDes.PAD_PKCS5)
 	cipher_text = key_handler.encrypt(plain_text)
-	#print("encrpted: {}".format(cipher_text))
 	return cipher_text
 
 def des_decrypt(key, cipher_text):
 	IV="33333333"
 	key_handler = pyDes.des(key, pyDes.CBC, IV, pad=None, padmode=pyDes.PAD_PKCS5)
 	plain_text = key_handler.decrypt(cipher_text)
-	#print("decrpted: {}".format(plain_text))
 	return plain_text
 
 
